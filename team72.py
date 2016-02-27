@@ -10,7 +10,7 @@ class Player72:
 
 		if old_move == (-1, -1):
 			print "old move"
-			return (4, 4)
+			return (2, 4)
 
 		if player_flag == 'x':
 			opponent_flag = 'o'
@@ -22,7 +22,7 @@ class Player72:
 
 		alphabeta_node = old_move
 		depth_limit = 4
-		freeMove = False
+		
 
 		next_move = alphabetaPruning(alphabeta_node, player_board[:], player_block[:], depth_limit, -100000, 100000, True, player_flag, opponent_flag, -1, -1)
 		print next_move[0], next_move[1]
@@ -31,12 +31,13 @@ class Player72:
 
 def alphabetaPruning(node, board, block_status, depth, alpha, beta, isMax, flag1, flag2, row, col):
 
+
 		cells = getCells(board, block_status, node)
-		
 		if depth == 0 or len(cells) == 0:
-			utility = check(board, block_status, row, col, flag1)
+			utility = 0
 			if freeMove:
 				utility += 1000
+			utility += check(board, block_status, row, col, flag1)
 			return (row, col, utility)
 
 		for cell in cells:
@@ -106,6 +107,7 @@ def getCells(board, block_status, old_move):
 def getValidEmptyCells(board, block_status, allowed_blocks):
 
 		cells = []
+		freeMove = False
 		for block in allowed_blocks:
 			if block_status[block] == '-':
 				id1 = block / 3;
@@ -137,10 +139,10 @@ def calculate(count_empty, count_x, count_o, player_flag):
 		player_count = count_o
 		opponent_count = count_x
 
-	if opponent_count == 0:
-		gain += pow(10, player_count) * 5
-	if opponent_count == 3:
-		gain -= pow(10, opponent_count) * 5
+	# if opponent_count == 0:
+	# 	gain += pow(10, player_count) * 5
+	# if opponent_count == 3:
+	# 	gain -= pow(10, opponent_count) * 5
 
 	if player_count == 3 and opponent_count == 0 and count_empty == 0:
 		return gain + 10000
@@ -254,6 +256,65 @@ def getBlockUtility(board, block_no, player_flag):
 
 	return utility
 
+def checkOpponentFreeMove(board, cell_row, cell_col, block_status, player_flag):
+	cells = getCells(board, block_status, (cell_row, cell_col))
+	if freeMove:
+		return True
+	return False
+
+def checkOpponentWinning(board, cell_row, cell_col, block_status, player_flag):
+	
+	cells = getCells(board, block_status, (cell_row, cell_col))
+	freeMove = False
+	for cell in cells:
+		if player_flag == 'x':
+			opponent_flag = 'o'
+		else:
+			opponent_flag = 'x'
+		
+		board[cell[0]][cell[1]] = opponent_flag
+		
+		block_start_row = cell[0] - cell[0] % 3
+		block_start_col = cell[1] - cell[1] % 3
+		count_opponent = 0
+		for i in range(0, 3):
+			if board[block_start_row + i][block_start_col] == opponent_flag:
+				count_opponent += 1
+		if count_opponent == 3:
+			board[cell[0]][cell[1]] = '-'
+			return True
+
+		count_opponent = 0
+		for i in range(0, 3):
+			if board[block_start_row][block_start_col + i] == opponent_flag:
+				count_opponent += 1
+		if count_opponent == 3:
+			board[cell[0]][cell[1]] = '-'
+			return True
+
+		count_opponent = 0
+		if cell_row % 3 == cell_col % 3:
+			for i in range(0, 3):
+				if board[block_start_row + i][block_start_col] == opponent_flag:
+					count_opponent += 1
+			if count_opponent == 3:
+				board[cell[0]][cell[1]] = '-'
+				return True
+
+		count_opponent = 0
+		if cell_row % 3 == 2 - cell_col % 3:
+			for i in range(0, 3):
+				if board[block_start_row + i][block_start_col] == opponent_flag:
+					count_opponent += 1
+			if count_opponent == 3:
+				board[cell[0]][cell[1]] = '-'
+				return True
+
+		board[cell[0]][cell[1]] = '-'
+
+	return False
+
+
 
 
 def getCellUtility(board, block_status, cell_row, cell_col, player_flag):
@@ -330,8 +391,131 @@ def getCellUtility(board, block_status, cell_row, cell_col, player_flag):
 
 		utility += calculate(empty, count_x, count_o, player_flag)
 
+	if checkOpponentWinning(board, cell_row, cell_col, block_status, player_flag):
+		utility += -10000
+	if checkOpponentFreeMove(board, cell_row, cell_col, block_status, player_flag):
+		utility += -100
+
 	return utility
 
+def calculateFactor(count_x, count_o, player_flag):
+	
+	factor = pow(10, abs(count_x - count_o))
+	
+	if player_flag == 'x' and count_o > count_x:
+		factor = -factor
+	if player_flag == 'o' and count_x > count_o:
+		factor = -factor
+	
+	return factor
+
+
+def getBlockGlobalUtility(block_status, block_no, block_utility, player_flag):
+	
+	board_start_row = (block_no / 3)
+	board_start_col = (block_no % 3)
+	utility = 0
+	
+
+	count_empty = 0
+	count_x = 0
+	count_o = 0
+	probability = 0
+
+	for i in range(0, 3):
+		
+		check_block_no = board_start_row * 3 + i
+		probability += block_utility[check_block_no]
+
+		if block_status[check_block_no] == '-':
+			count_empty += 1
+		if block_status[check_block_no] == 'x':
+			count_x += 1
+		if block_status[check_block_no] == 'o':
+			count_o += 1
+	if player_flag == 'x' and count_x == 3:
+		return 1000
+	if player_flag == 'o' and count_o == 3:
+		return -1000
+
+	factor = calculateFactor(count_x, count_o, player_flag)
+	
+	utility +=  factor * (probability / 30000)
+
+	count_empty = 0
+	count_x = 0
+	count_o = 0
+	probability = 0
+	for i in range(0, 3):
+		
+		check_block_no = board_start_col + i * 3
+		probability += block_utility[check_block_no]
+
+		if block_status[check_block_no] == '-':
+			count_empty += 1
+		if block_status[check_block_no] == 'x':
+			count_x += 1
+		if block_status[check_block_no] == 'o':
+			count_o += 1
+	if player_flag == 'x' and count_x == 3:
+		return 1000
+	if player_flag == 'o' and count_o == 3:
+		return -1000
+
+	factor = calculateFactor(count_x, count_o, player_flag)
+
+	utility += factor * (probability / 30000)
+
+	if board_start_row == board_start_col:
+		count_empty = 0
+		count_x = 0
+		count_o = 0
+		probability = 0
+		for i in range(0, 3):
+			
+			check_block_no = 3 * i + i
+			probability += block_utility[check_block_no]
+			
+			if block_status[check_block_no] == '-':
+				count_empty += 1
+			if block_status[check_block_no] == 'x':
+				count_x += 1
+			if block_status[check_block_no] == 'o':
+				count_o += 1
+		if player_flag == 'x' and count_x == 3:
+			return 1000
+		if player_flag == 'o' and count_o == 3:
+			return -1000
+
+		factor = calculateFactor(count_x, count_o, player_flag)
+
+		utility += factor * (probability / 30000)
+
+	if board_start_row == 2 - board_start_col:
+		count_empty = 0
+		count_x = 0
+		count_o = 0
+		probability = 0
+		for i in range(0, 3):
+			
+			check_block_no = 2 * (i + 1)
+			probability += block_utility[check_block_no]
+			
+			if block_status[check_block_no] == '-':
+				count_empty += 1
+			if block_status[check_block_no] == 'x':
+				count_x += 1
+			if block_status[check_block_no] == 'o':
+				count_o += 1
+			if player_flag == 'x' and count_x == 3:
+				return 1000
+			if player_flag == 'o' and count_o == 3:
+				return -1000
+
+		factor = calculateFactor(count_x, count_o, player_flag)
+
+		utility += factor * (probability / 30000)
+	return utility
 
 def check(board, block_status, row, col, player_flag):
 	block_utility = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -341,7 +525,18 @@ def check(board, block_status, row, col, player_flag):
 	
 	cell_utility = getCellUtility(board, block_status, row, col, player_flag)
 
-	return cell_utility
+	block_no = 3 * ((row - row % 3) / 3) + (col - col % 3) / 3
+
+	globalUtility = getBlockGlobalUtility(block_status, block_no, block_utility, player_flag)
+
+	specific_block_winning_utility = 0
+	if cell_utility == 10000:
+		if block_no == 4:
+			specific_block_winning_utility = 1000
+		if block_no in [0, 2, 6, 8]:
+			specific_block_winning_utility = 800 
+
+	return cell_utility / 10 + globalUtility + specific_block_winning_utility / 10
 
 
 

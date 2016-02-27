@@ -379,6 +379,10 @@ def simulate(obj1,obj2):
 	
 	print WINNER
 	print MESSAGE
+	if isinstance(pl1, Player72):
+		print "I am P1"
+	else: 
+		print "I am P2"
 
 if __name__ == '__main__':
 	## get game playing objects
