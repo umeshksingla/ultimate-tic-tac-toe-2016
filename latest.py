@@ -68,7 +68,7 @@ def getCells(board, block, old_move):
 			allowed_blocks = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 		else:
 			allowed_blocks = []
-			if old_move[0]%3 == 1 and old_move[1]%3 == 1:
+			if old_move[1]%3 == 1 and old_move[0]%3 == 1:
 				allowed_blocks = [4]
 			else:
 				if old_move[1]%3 == 0 and old_move[0]%3 == 0:
@@ -220,13 +220,14 @@ def getBlockUtility(board, block_no, player_flag):
 
 
 def getCellUtility(board, block, cell_row, cell_col, player_flag):
+	
 	board_row = cell_row - cell_row % 3;
 	board_col = cell_col - cell_col % 3;
 	utility = 0
+	
 	empty = 0
 	count_x = 0
 	count_o = 0
-
 	for i in range(0, 3):
 		if board[cell_row][board_col + i] == '-':
 			empty += 1;
@@ -249,10 +250,10 @@ def getCellUtility(board, block, cell_row, cell_col, player_flag):
 			count_o += 1;
 	utility += calculate(empty, count_x, count_o, player_flag)
 
+	empty = 0
+	count_x = 0
+	count_o = 0
 	if cell_row % 3 == cell_col % 3:
-		empty = 0
-		count_x = 0
-		count_o = 0
 		for i in range(0, 3):
 			if board[board_row + i][board_col + i] == '-':
 				empty += 1;
@@ -261,11 +262,11 @@ def getCellUtility(board, block, cell_row, cell_col, player_flag):
 			if board[board_row + i][board_col + i] == 'o':
 				count_o += 1;
 		utility += calculate(empty, count_x, count_o, player_flag)
-
+	
+	empty = 0
+	count_x = 0
+	count_o = 0
 	if cell_row % 3 == 2 - cell_col % 3:
-		empty = 0
-		count_x = 0
-		count_o = 0
 		for i in range(0, 3):
 			if board[board_row + i][board_col + 2 - i] == '-':
 				empty += 1;
