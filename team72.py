@@ -9,6 +9,7 @@ class Player72:
 	def move(self, temp_board, temp_block_status, old_move, player_flag):
 
 		if old_move == (-1, -1):
+			print "old move"
 			return (2, 4)
 
 		if player_flag == 'x':
@@ -24,12 +25,11 @@ class Player72:
 		
 
 		next_move = alphabetaPruning(alphabeta_node, player_board[:], player_block[:], depth_limit, -100000, 100000, True, player_flag, opponent_flag, -1, -1)
-		
+		print next_move[0], next_move[1]
 		return (next_move[0], next_move[1])
 
 
 def alphabetaPruning(node, board, block_status, depth, alpha, beta, isMax, flag1, flag2, row, col):
-
 
 		cells = getCells(board, block_status, node)
 		if depth == 0 or len(cells) == 0:
@@ -71,7 +71,7 @@ def alphabetaPruning(node, board, block_status, depth, alpha, beta, isMax, flag1
 def getCells(board, block_status, old_move):
 
 		if old_move == (-1, -1):
-			allowed_blocks = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+			allowed_blocks = [0, 1, 2, 3, 4, 5, 6, 7, 8]	# all blocka allowed
 		else:
 			allowed_blocks = []
 			if old_move[0]%3 == 1 and old_move[1]%3 == 1:
@@ -96,6 +96,7 @@ def getCells(board, block_status, old_move):
 				else:
 					print "not a valid old move"
 
+		# if already won by 'x' or 'o', then remove from allowed blocks
 		for i in reversed(allowed_blocks):
 				if block_status[i] != '-':
 					allowed_blocks.remove(i)
@@ -146,17 +147,17 @@ def calculate(count_empty, count_x, count_o, player_flag):
 	if player_count == 3 and opponent_count == 0 and count_empty == 0:
 		return gain + 10000
 	if player_count == 0 and opponent_count == 3 and count_empty == 0:
-		return gain - 10000
+		return gain + 0 # here -10000
 	if player_count == 1 and opponent_count == 2 and count_empty == 0:
 		return gain + 1000
 	if player_count == 2 and opponent_count == 0 and count_empty == 1:
 		return gain + 100
 	if player_count == 0 and opponent_count == 2 and count_empty == 1:
-		return gain - 100
+		return gain + 0  # here -100
 	if player_count == 1 and opponent_count == 0 and count_empty == 2:
 		return gain + 10
 	if player_count == 0 and opponent_count == 1 and count_empty == 2:
-		return gain - 10
+		return gain + 0  # here -10
 	if player_count == 0 and opponent_count == 0 and count_empty == 3:
 		return gain + 1
 	if player_count == 2 and opponent_count == 1 and count_empty == 0:
@@ -313,9 +314,6 @@ def checkOpponentWinning(board, cell_row, cell_col, block_status, player_flag):
 
 	return False
 
-
-
-
 def getCellUtility(board, block_status, cell_row, cell_col, player_flag):
 	board_row = cell_row - cell_row % 3;
 	board_col = cell_col - cell_col % 3;
@@ -350,6 +348,7 @@ def getCellUtility(board, block_status, cell_row, cell_col, player_flag):
 			count_x += 1;
 		if board[board_row + i][cell_col] == 'o':
 			count_o += 1;
+
 	if player_flag == 'x' and count_x == 3:
 			return calculate(empty, count_x, count_o, player_flag)
 	if player_flag == 'o' and count_o == 3:
@@ -396,9 +395,9 @@ def getCellUtility(board, block_status, cell_row, cell_col, player_flag):
 		utility += calculate(empty, count_x, count_o, player_flag)
 
 	if checkOpponentWinning(board, cell_row, cell_col, block_status, player_flag):
-		utility += -10000
+		utility += 0 # here -10000
 	if checkOpponentFreeMove(board, cell_row, cell_col, block_status, player_flag):
-		utility += -100
+		utility += 0 # here -100
 
 	return utility
 
@@ -412,16 +411,14 @@ def calculateFactor(count_x, count_o, player_flag):
 		elif count_o == 1 and count_x == 2:
 			factor = 1
 		elif count_o > count_x:
-			factor = -factor
-
+			factor = 0 # here -factor
 	if player_flag == 'o' and count_x > count_o:
 		if count_x == 2 and count_o == 1:
 			factor = factor * 10 * 5
 		elif count_x == 1 and count_o == 2:
 			factor = 1
 		elif count_x > count_o:
-			factor = -factor
-	
+			factor = 0 # here -factor
 	return factor
 
 
@@ -431,7 +428,6 @@ def getBlockGlobalUtility(block_status, block_no, block_utility, player_flag):
 	board_start_col = (block_no % 3)
 	utility = 0
 	
-
 	count_empty = 0
 	count_x = 0
 	count_o = 0
@@ -552,4 +548,15 @@ def check(board, block_status, row, col, player_flag):
 		if block_no in [0, 2, 6, 8]:
 			specific_block_winning_utility = 800 
 
-	return cell_utility / 10.0 + globalUtility + specific_block_winning_utility / 10.0
+	#print "cell utility:", cell_utility
+	#print "global utility:", globalUtility
+	#print "specific utility:", specific_block_winning_utility
+	total = cell_utility / 10.0 + globalUtility + specific_block_winning_utility / 10.0
+	#print "total:", total
+	return total
+
+
+
+
+
+

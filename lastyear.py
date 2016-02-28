@@ -367,7 +367,7 @@ def edge(hx, hy, Final_gain, board):
 	return 0
 
 def same(hx, hy, Final_gain, board):
-	# same as new() but everyhtin gis being checked here
+	# same as new() but everything is being checked here
 	cx=0
 	co=0
 	cd=0
