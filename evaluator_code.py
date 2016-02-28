@@ -295,8 +295,8 @@ def simulate(obj1,obj2):
 	WINNER = ''
 	MESSAGE = ''
 	TIMEALLOWED = 12000
-	p1_pts=0
-	p2_pts=0
+	p1_pts = 0
+	p2_pts = 0
 
 	print_lists(game_board, block_stat)
 
