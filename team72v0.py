@@ -1,6 +1,6 @@
 
 
-class Player66:
+class Player72:
 	
 	def __init__(self):
 		
@@ -23,13 +23,8 @@ class Player66:
 		#print next_move
                 
 		return (next_move[1], next_move[2])
-"""b = [['x','o','-','o','-','-','o','-','-'],['x','o','-','-','x','-','-','x','o'],['o','x','-','-','-','-','x','o','-'],['o','o','-','x','x','-','-','x','x'],['-','-','x','x','o','-','x','x','x'],['o','x','-','-','-','-','o','o','-'],['x','o','-','o','o','-','x','-','x'],['o','x','-','-','-','x','o','-','x'],['x','x','-','-','-','x','x','x','-']]
 
-p_block = ['-']*9"""
 
-"""b = [['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','x','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','o','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','x','-','-','-'],['-','-','-','o','x','x','o','o','x']]"""
-
-"""b = [['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','x','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-']]"""
 
 def minimax(node, depth, alpha, beta, maxnode, p_board, p_block, flag1, flag2, best_row, best_col):
 	
@@ -65,104 +60,46 @@ def minimax(node, depth, alpha, beta, maxnode, p_board, p_block, flag1, flag2, b
 			return (alpha, best_row, best_col)
 		else:
 			return(beta, best_row, best_col)	               
-	'''if maxnode:
-		#v = mini
-                #print 'v =' + str(v) 
-		p_board[node[0]][node[1]] = flag2
-		#print p_board
-		children_list = compute_cells(p_board,p_block,node)
-		#print node
-                #print children_list
-		for child in children_list:
-			v1 = minimax (child,depth-1,mini,maxi,False,p_board,p_block,flag1,flag2,best_row,best_col)
-			if(depth != 4):
-				p_board[node[0]][node[1]] = '-'
-			#print 'v1 = ' + str(v1)
-			if (v1[0] > mini):
-				mini = v1[0]
-				best_row = child[0]
-				best_col = child[1]
-                                		
-			#if (v >= maxi): 
-			#	return (maxi,best_row,best_col)
-		return (v,best_row,best_col)
 	
-	else:
-		v = maxi
-		p_board[node[0]][node[1]] = flag1
-		#print p_board
-		#print 'min',                
-		#print node
-		children_list = compute_cells(p_board,p_block,node)
-		#print children_list
-		for child in children_list:
-        		v1 = minimax (child,depth-1,mini,v,True,p_board,p_block,flag1,flag2,best_row,best_col)
-                        p_board[node[0]][node[1]] = '-'
-			#print 'v1 = ' + str(v1)
-        		if (v1[0] < v): 
-				v = v1[0]
-				best_row = child[0]
-				best_col = child[1]
-        		if (v <= mini): 
-				return (mini,best_row,best_col)
-        	return (v,best_row,best_col)'''
 
-def compute_cells(p_board,p_block,old_move):
+def compute_cells(board,block_status,old_move):
 		
-		
-		for_corner = [0,2,3,5,6,8]
-		if(old_move == (-1,-1)):
-			blocks_allowed = [0,1,2,3,4,5,6,7,8]
-		#List of permitted blocks, based on old move.
+		if old_move == (-1, -1):
+			allowed_blocks = [0, 1, 2, 3, 4, 5, 6, 7, 8]	# all blocka allowed
 		else:
-			blocks_allowed  = []
-
-			if old_move[0] in for_corner and old_move[1] in for_corner:
-				## we will have 3 representative blocks, to choose from
-
-				if old_move[0] % 3 == 0 and old_move[1] % 3 == 0:
-					## top left 3 blocks are allowed
-					blocks_allowed = [0, 1, 3]
-				elif old_move[0] % 3 == 0 and old_move[1] in [2, 5, 8]:
-					## top right 3 blocks are allowed
-					blocks_allowed = [1,2,5]
-				elif old_move[0] in [2,5, 8] and old_move[1] % 3 == 0:
-					## bottom left 3 blocks are allowed
-					blocks_allowed  = [3,6,7]
-				elif old_move[0] in [2,5,8] and old_move[1] in [2,5,8]:
-					### bottom right 3 blocks are allowed
-					blocks_allowed = [5,7,8]
-				else:
-					print "SOMETHING REALLY WEIRD HAPPENED!"
-					sys.exit(1)
+			allowed_blocks = []
+			if old_move[0]%3 == 1 and old_move[1]%3 == 1:
+				allowed_blocks = [4]
 			else:
-			#### we will have only 1 block to choose from (or maybe NONE of them, which calls for a free move)
-				if old_move[0] % 3 == 0 and old_move[1] in [1,4,7]:
-					## upper-center block
-					blocks_allowed = [1]
-	
-				elif old_move[0] in [1,4,7] and old_move[1] % 3 == 0:
-					## middle-left block
-					blocks_allowed = [3]
-		
-				elif old_move[0] in [2,5,8] and old_move[1] in [1,4,7]:
-					## lower-center block
-					blocks_allowed = [7]
+				if old_move[1]%3 == 0 and old_move[0]%3 == 0:
+					allowed_blocks = [1, 3]
+				elif old_move[1]%3 == 1 and old_move[0]%3 == 0:
+					allowed_blocks = [0, 2]
+				elif old_move[1]%3 == 2 and old_move[0]%3 == 0:
+					allowed_blocks = [1, 5]
+				elif old_move[1]%3 == 0 and old_move[0]%3 == 1:
+					allowed_blocks = [0, 6]
+				elif old_move[1]%3 == 2 and old_move[0]%3 == 1:
+					allowed_blocks = [2, 8]
+				elif old_move[1]%3 == 0 and old_move[0]%3 == 2:
+					allowed_blocks = [3, 7]
+				elif old_move[1]%3 == 1 and old_move[0]%3 == 2:
+					allowed_blocks = [6, 8]
+				elif old_move[1]%3 == 2 and old_move[0]%3 == 2:
+					allowed_blocks = [7, 5]
+				else:
+					print "not a valid old move"
 
-				elif old_move[0] in [1,4,7] and old_move[1] in [2,5,8]:
-					## middle-right block
-					blocks_allowed = [5]
-				elif old_move[0] in [1,4,7] and old_move[1] in [1,4,7]:
-					blocks_allowed = [4]
+		# if already won by 'x' or 'o', then remove from allowed blocks
+		for i in reversed(allowed_blocks):
+				if block_status[i] != '-':
+					allowed_blocks.remove(i)
 
-                for i in reversed(blocks_allowed):
-                    if p_block[i] != '-':
-                        blocks_allowed.remove(i)
-	# We get all the empty cells in allowed blocks. If they're all full, we get all the empty cells in the entire board.
-		cells = get_empty_out_of(p_board, blocks_allowed,p_block)
+		cells = get_empty_out_of(board, block_status, allowed_blocks)
 		return cells
 
-def get_empty_out_of(gameb, blal,block_stat):
+
+def get_empty_out_of(gameb,block_stat, blal):
 	cells = []  # it will be list of tuples
 	#Iterate over possible blocks and get empty cells
 	for idb in blal:
@@ -341,7 +278,7 @@ def check_utility(board, block_no):
 			elif hx%3 == 0 and hy%3==1:
 				vaishu =edge(hx, hy, Final_gain,board)
 
-			elif hx%3==1 and hy %3 == 0:
+			elif hx%3==1 and hy % 3 == 0:
 				vaishu = edge(hx, hy, Final_gain,board)
 			elif hx%3 == 2 and hy%3 == 1:
 				vaishu =edge(hx, hy, Final_gain,board)
@@ -352,14 +289,12 @@ def check_utility(board, block_no):
 			if vaishu == 0:
 				Final_gain = -200
 
-
 	#print Final_gain
 	if flags==1:
 		Final_gain = 0
 	
-
-
 	return Final_gain;
+
 def edge(hx, hy,Final_gain, board):
 	cx=0
 	co=0
@@ -455,11 +390,12 @@ def same(hx, hy,Final_gain,board):
 		if next > 0:
 			return next
 	return 0
+
+
 def new(hx, hy,Final_gain,board):
 	cx=0
 	co=0
 	cd=0
-	
 	for i in range(0,3):
 		gx = hx - hx%3
 		gy = hy
@@ -469,8 +405,7 @@ def new(hx, hy,Final_gain,board):
 			cx += 1;
 		if board[gx+i][gy] == 'o':
 			co += 1
-		#print 'new',calculate(cx, cd, co, Final_gain)
-		next=calculate(cx, cd, co, Final_gain)
+		next=calculate(cx, cd, co)
 		if next > 0:
 			return next
 	for i in range(0,3):
@@ -482,11 +417,9 @@ def new(hx, hy,Final_gain,board):
 			cx += 1;
 		if board[gx][gy+i] == 'o':
 			co += 1
-		#print 'new',calculate(cx, cd, co, Final_gain)
-		next=calculate(cx, cd, co, Final_gain)
+		next=calculate(cx, cd, co)
 		if next > 0:
 			return next
-
 	for i in range(0,3):
 		gx = hx - hx%3
 		gy = hy - hy%3
@@ -496,11 +429,12 @@ def new(hx, hy,Final_gain,board):
 			cx += 1;
 		if board[gx+i][gy+i] == 'o':
 			co += 1
-		#print 'new',calculate(cx, cd, co, Final_gain)
-		next=calculate(cx, cd, co, Final_gain)
+		next=calculate(cx, cd, co)
 		if next > 0:
 			return next
 	return 0
+
+
 def hnew(hx, hy, Final_gain,board):
 	cx =0
 	co=0
@@ -548,8 +482,6 @@ def hnew(hx, hy, Final_gain,board):
 	return 0
 
 
-
-
 def calculate(cx, cd, co, gain):
 	
 	if(cx == 2 and co == 0 and cd == 1):
@@ -567,8 +499,6 @@ def calculate(cx, cd, co, gain):
 
 def check(b,p_block):
 	a = [0,0,0,0,0,0,0,0,0]
-	"""b = [['o','o','o','o','o','o','o','o','o'],['x','o','x','-','x','-','-','x','o'],['o','x','-','-','-','-','x','o','-'],['o','o','o','x','x','x','-','x','x'],['-','-','x','x','o','-','x','x','x'],['o','o','o','-','-','-','o','o','-'],['x','o','-','o','o','-','x','o','x'],['o','x','-','-','-','x','o','o','x'],['x','x','-','-','-','x','x','x','o']]"""
-	"""b = [['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','x','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','o','-','-','-','-','-','-'],['-','-','-','-','-','-','-','-','-'],['-','-','-','-','-','x','-','-','-'],['-','-','-','o','x','x','o','o','x']]"""
 
 	for i in range(0, 9):
 		c = check_utility(b, i);
@@ -586,13 +516,6 @@ def check(b,p_block):
 			dummy[x][y] = 'alpha'
 		else:
 			dummy[x][y] = float(a[i]) / 100;
-		"""elif a[i] < 0:
-			if abs(a[i])<10:
-				dummy[x][y] = float(a[i]) / 100;
-			else:
-				dummy[x][y] = float(a[i]) / 100
-		elif a[i] == 0:
-			dummy[x][y] = 0"""
 
 	#print dummy
 	index=0
@@ -630,15 +553,14 @@ def check(b,p_block):
 	    	        	cnt_p=cnt_p+1
 	    	        if dummy[i][j]==-1:
 	    	        	cnt_n=cnt_n+1				
-	    		factor_r=cal_factor(sumr)
-	    		factor_c=cal_factor(sumc)
-	    		factor_d1=cal_factor(sumd1)
-	    		factor_d2=cal_factor(sumd2)
+		factor_r=cal_factor(sumr)
+		factor_c=cal_factor(sumc)
+		factor_d1=cal_factor(sumd1)
+		factor_d2=cal_factor(sumd2)
 	  	 	
             
-        	if sumr == -1 or sumr == 1:
-        		flag_rr=change_utility(index,dummy)
-        		#print "kkkkkkkkkk",flag_rr,index
+	    	if sumr == -1 or sumr == 1:
+	    		flag_rr=change_utility(index,dummy)
 		elif sumc == -1 or sumc == 1:
 			flag_cc=change_utility(index+3,dummy)
 		elif sumd1 == -1 or sumd1 == 1:
@@ -659,7 +581,6 @@ def check(b,p_block):
 			ultimate_flag=sumd2
 			break	
 			
-
 		if flag_r==1 or flag_rr==1:
 			utility[index]=0
 		else:	
@@ -668,14 +589,13 @@ def check(b,p_block):
 				utility[index]=-utility[index]
 		if flag_c==1 or flag_cc==1:
 			utility[index+3]=0
-		else:		
+		else:
 			utility[index+3] = int(pow(10,abs(int(sumc))-1)) + (sumc-int(sumc))*factor_c
 			if sumc < 0:
 				utility[index+3]=-utility[index+3]
 		if flag_d1==1 or flag_dd1==1:
 			utility[6]=0
-
-		else:	
+		else:
 			utility[6] = int(pow(10,abs(int(sumd1))-1)) + (sumd1-int(sumd1))*factor_d1 
         		if sumd1 < 0:
 	    			utility[6]=-utility[6]
@@ -686,6 +606,7 @@ def check(b,p_block):
 			if sumd2 < 0:
 				utility[7]=-utility[7] 
 		index+=1
+	
 	if dummy[0][0]!='alpha':
 		if dummy[0][0]>0:
 			dia_pos_sum=dia_pos_sum+dummy[0][0]
@@ -718,8 +639,8 @@ def check(b,p_block):
         	utility_board=utility_board+(cnt_p - cnt_n)*10
         	utility_board=utility_board+(abs(dia_pos_sum)-abs(dia_neg_sum))*5
        
-			
 	return utility_board	
+
 
 def change_utility(index,dummy):
 	i=index;
@@ -766,7 +687,7 @@ def change_utility(index,dummy):
 					flag=1
 					break
 
-	elif i==7:
+	elif i == 7:
 		for k in range(0,3):
 			if dummy[k][2-k]==-1 or dummy[k][2-k]==1:
 				value=dummy[k][2-k]
@@ -796,5 +717,4 @@ def cal_factor(sum):
 		factor_f=90
 	return factor_f
 
-#print "HIIIIII",utility_board
 

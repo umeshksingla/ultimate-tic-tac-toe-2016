@@ -16,7 +16,11 @@ In case of any queries, please post on moodle.iiit.ac.in
 import sys
 import random
 import signal
-from team72 import Player72
+
+from team66 import Player66
+
+class TimedOutExc(Exception):
+        pass
 
 def handler(signum, frame):
     #print 'Signal handler called with signal', signum
@@ -185,8 +189,6 @@ def update_lists(game_board, block_stat, move_ret, fl):
 			if game_board[i][j] == '-':
 				flag = 1
 
-	if flag == 0:
-		block_stat[block_no] = 'D'
 
 	if block_stat[block_no] == '-':
 		if game_board[id1*3][id2*3] == game_board[id1*3+1][id2*3+1] and game_board[id1*3+1][id2*3+1] == game_board[id1*3+2][id2*3+2] and game_board[id1*3+1][id2*3+1] != '-' and game_board[id1*3+1][id2*3+1] != 'D':
@@ -203,6 +205,8 @@ def update_lists(game_board, block_stat, move_ret, fl):
                         if game_board[i][id2*3]==game_board[i][id2*3+1] and game_board[i][id2*3+1] == game_board[i][id2*3+2] and game_board[i][id2*3] != '-' and game_board[i][id2*3] != 'D':
                                 mflg = 1
                                 break
+	if flag == 0:
+		block_stat[block_no] = 'D'
 	if mflg == 1:
 		block_stat[block_no] = fl
 	
@@ -294,9 +298,9 @@ def simulate(obj1,obj2):
 
 	WINNER = ''
 	MESSAGE = ''
-	TIMEALLOWED = 12000
-	p1_pts = 0
-	p2_pts = 0
+	TIMEALLOWED = 12
+	p1_pts=0
+	p2_pts=0
 
 	print_lists(game_board, block_stat)
 
@@ -307,14 +311,14 @@ def simulate(obj1,obj2):
 	
 		signal.signal(signal.SIGALRM, handler)
 		signal.alarm(TIMEALLOWED)
-		ret_move_pl1 = pl1.move(temp_board_state, temp_block_stat, old_move, pl1_fl)
+#		ret_move_pl1 = pl1.move(temp_board_state, temp_block_stat, old_move, pl1_fl)
 
-#		try:
-#			ret_move_pl1 = pl1.move(temp_board_state, temp_block_stat, old_move, pl1_fl)
-#		except:
-#			WINNER, MESSAGE = decide_winner_and_get_message('P1', 'L',   'TIMED OUT')
-#			print MESSAGE
-#			break
+		try:
+			ret_move_pl1 = pl1.move(temp_board_state, temp_block_stat, old_move, pl1_fl)
+		except:
+			WINNER, MESSAGE = decide_winner_and_get_message('P1', 'L',   'TIMED OUT')
+		#	print MESSAGE
+			break
 		signal.alarm(0)
 	
 		# Check if list is tampered.
@@ -379,10 +383,7 @@ def simulate(obj1,obj2):
 	
 	print WINNER
 	print MESSAGE
-	if isinstance(pl1, Player72):
-		print "I am P1"
-	else: 
-		print "I am P2"
+
 
 if __name__ == '__main__':
 	## get game playing objects
@@ -399,7 +400,7 @@ if __name__ == '__main__':
 	option = sys.argv[1]	
 	if option == '1':
 		obj1 = Player1()
-		obj2 = Player72()
+		obj2 = Player66()
 
 	elif option == '2':
 		obj1 = Player1()
@@ -412,9 +413,8 @@ if __name__ == '__main__':
 		sys.exit(1)
 
 	num = random.uniform(0,1)
-	if num > 0.5:
-		simulate(obj2, obj1)
-	else:
+	if num > 0:
 		simulate(obj1, obj2)
+		print "I am P2"
 		
 	
