@@ -2,8 +2,9 @@ freeMove = False
 
 # done
 class Player72:
+	
 	# done
-	def __init__(self):
+	def __init__(self):	
 		pass
 
 	# done
@@ -33,7 +34,7 @@ def alphabetaPruning(old_move, board, block_status, depth, alpha, beta, isMax, p
 		cells = getCells(board, block_status, old_move)
 		if depth == 0 or len(cells) == 0:
 			# from now on we'll assume player_flag to be 'x' and if not the case, we'll just invert the utility obtained
-			utility = check(board, block_status) 
+			utility = check(board, block_status, row, col) 
 			if player_flag == 'o':
 				return (row, col, -utility)
 			return (row, col, utility)
@@ -563,11 +564,15 @@ def checkOpponentWinning(board, cell_row, cell_col, block_status, player_flag):
 
 	return False
 
-
-def getCellUtility(board, block_status, cell_row, cell_col, player_flag):
+# done
+def getCellUtility(board, block_status, cell_row, cell_col):
+	
 	board_row = cell_row - cell_row % 3;
 	board_col = cell_col - cell_col % 3;
+	
 	utility = 0
+	
+	# row
 	empty = 0
 	count_x = 0
 	count_o = 0
@@ -580,14 +585,15 @@ def getCellUtility(board, block_status, cell_row, cell_col, player_flag):
 		if board[cell_row][board_col + i] == 'o':
 			count_o += 1;
 
-	if player_flag == 'x' and count_x == 3:
-			return calculate(empty, count_x, count_o, player_flag)
-	if player_flag == 'o' and count_o == 3:
-			return calculate(empty, count_x, count_o, player_flag)
+	if count_x == 3:
+			return calculate(empty, count_x, count_o)
+	if count_o == 3:
+			return calculate(empty, count_x, count_o)
 
-	utility += calculate(empty, count_x, count_o, player_flag)
+	utility += calculate(empty, count_x, count_o)
 
 
+	# column
 	empty = 0
 	count_x = 0
 	count_o = 0
@@ -599,13 +605,14 @@ def getCellUtility(board, block_status, cell_row, cell_col, player_flag):
 		if board[board_row + i][cell_col] == 'o':
 			count_o += 1;
 
-	if player_flag == 'x' and count_x == 3:
-			return calculate(empty, count_x, count_o, player_flag)
-	if player_flag == 'o' and count_o == 3:
-			return calculate(empty, count_x, count_o, player_flag)
+	if count_x == 3:
+			return calculate(empty, count_x, count_o)
+	if count_o == 3:
+			return calculate(empty, count_x, count_o)
 
-	utility += calculate(empty, count_x, count_o, player_flag)
+	utility += calculate(empty, count_x, count_o)
 
+	# diagnol 1
 	if cell_row % 3 == cell_col % 3:
 		empty = 0
 		count_x = 0
@@ -618,13 +625,13 @@ def getCellUtility(board, block_status, cell_row, cell_col, player_flag):
 			if board[board_row + i][board_col + i] == 'o':
 				count_o += 1;
 		
-		if player_flag == 'x' and count_x == 3:
-			return calculate(empty, count_x, count_o, player_flag)
-		if player_flag == 'o' and count_o == 3:
-			return calculate(empty, count_x, count_o, player_flag)
+		if count_x == 3:
+			return calculate(empty, count_x, count_o)
+		if count_o == 3:
+			return calculate(empty, count_x, count_o)
+		utility += calculate(empty, count_x, count_o)
 
-		utility += calculate(empty, count_x, count_o, player_flag)
-
+	# diagnol 2
 	if cell_row % 3 == 2 - cell_col % 3:
 		empty = 0
 		count_x = 0
@@ -637,18 +644,16 @@ def getCellUtility(board, block_status, cell_row, cell_col, player_flag):
 			if board[board_row + i][board_col + 2 - i] == 'o':
 				count_o += 1;
 		
-		if player_flag == 'x' and count_x == 3:
-			return calculate(empty, count_x, count_o, player_flag)
-		if player_flag == 'o' and count_o == 3:
-			return calculate(empty, count_x, count_o, player_flag)
+		if count_x == 3:
+			return calculate(empty, count_x, count_o)
+		if count_o == 3:
+			return calculate(empty, count_x, count_o)
+		utility += calculate(empty, count_x, count_o)
 
-		utility += calculate(empty, count_x, count_o, player_flag)
-
-	if checkOpponentWinning(board, cell_row, cell_col, block_status, player_flag):
-		utility += 0 # here -10000
-	if checkOpponentFreeMove(board, cell_row, cell_col, block_status, player_flag):
-		utility += 0 # here -100
-
+	# if checkOpponentWinning(board, cell_row, cell_col, block_status, player_flag):
+	# 	utility += 0 # here -10000
+	# if checkOpponentFreeMove(board, cell_row, cell_col, block_status, player_flag):
+	# 	utility += 0 # here -100
 	return utility
 
 # done
@@ -878,19 +883,20 @@ def getBlockGlobalUtility(block_status, block_utility_array):
 
 # done
 def finalUtility(global_utility, count_us, count_opponent, count_us_corners, count_opponent_corners, ultimate_win_flag):
+	
 	utility_board = 0
 	for k in range(0, 8):
 		if ultimate_win_flag == 3 or ultimate_win_flag == -3:	# clear win/lose
-			utility_board = 100
+			utility_board = 100 * (ultimate_win_flag) / 3
 			break
 		utility_board = global_utility[k] + utility_board		# need to calculate
         if ultimate_win_flag != 3 and ultimate_win_flag != -3:
         	utility_board += (count_us - count_opponent) * 10
-        	utility_board += (abs(count_us_corners)-abs(count_opponent_corners)) * 5
+        	utility_board += (abs(count_us_corners) - abs(count_opponent_corners)) * 5
 	return utility_board
 
 # done
-def check(board, block_status):
+def check(board, block_status, row, col):
 	#print "here in check"
 	block_utility = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -909,8 +915,8 @@ def check(board, block_status):
 		#print "after count empty"
 		block_utility[block_no] = current_block_utility
 	#print "out of each block"
-	# cell_utility = getCellUtility(board, block_status, row, col, player_flag)
-
+	cell_utility = getCellUtility(board, block_status, row, col)
+	#print 'cell_utility: ', cell_utility
 	# block_no = 3 * ((row - row % 3) / 3) + (col - col % 3) / 3
 
 	(global_utility, normalized_utility, count_us, count_opponent, ultimate_win_flag) = getBlockGlobalUtility(block_status, block_utility)
@@ -931,5 +937,5 @@ def check(board, block_status):
 	##print "total:", total
 	final = finalUtility(global_utility, count_us, count_opponent, count_us_corners, count_opponent_corners, ultimate_win_flag)
 	#print "final", final
-	return final
+	return final + cell_utility/10
 
