@@ -17,7 +17,7 @@ import sys
 import random
 import signal
 
-from team66 import Player66
+from team72v1 import Player72
 
 class TimedOutExc(Exception):
         pass
@@ -399,8 +399,8 @@ if __name__ == '__main__':
 	obj2 = ''
 	option = sys.argv[1]	
 	if option == '1':
-		obj1 = Player1()
-		obj2 = Player66()
+		obj1 = Player72()
+		obj2 = Player1()
 
 	elif option == '2':
 		obj1 = Player1()
@@ -413,8 +413,8 @@ if __name__ == '__main__':
 		sys.exit(1)
 
 	num = random.uniform(0,1)
-	if num > 0:
-		simulate(obj1, obj2)
-		print "I am P2"
+
+	simulate(obj1, obj2)
+	print "I am P1"
 		
 	

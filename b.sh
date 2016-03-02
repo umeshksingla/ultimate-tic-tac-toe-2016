@@ -1,4 +1,4 @@
 for i in {1..100}
-do
+do 
 	tail -5 $i
 done

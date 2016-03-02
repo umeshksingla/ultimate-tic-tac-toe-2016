@@ -10,7 +10,7 @@ class Player72:
 	def move(self, temp_board, temp_block_status, old_move, player_flag):
 
 		if old_move == (-1, -1):
-			print "old move"
+			#print "old move"
 			return (2, 4)
 
 		if player_flag == 'x':
@@ -23,7 +23,7 @@ class Player72:
 
 		depth_limit = 4
 
-		next_move = alphabetaPruning(old_move, player_board[:], player_block[:], depth_limit, -100000, 100000, True, player_flag, opponent_flag, -1, -1)
+		next_move = alphabetaPruning(old_move, player_board[:], player_block[:], depth_limit, -1000, 1000, True, player_flag, opponent_flag, -1, -1)
 		print next_move[0], next_move[1]
 		return (next_move[0], next_move[1])
 
@@ -33,25 +33,26 @@ def alphabetaPruning(old_move, board, block_status, depth, alpha, beta, isMax, p
 		cells = getCells(board, block_status, old_move)
 		if depth == 0 or len(cells) == 0:
 			# from now on we'll assume player_flag to be 'x' and if not the case, we'll just invert the utility obtained
-			utility = check(board, block_status, row, col, player_flag) 
+			utility = check(board, block_status) 
 			if player_flag == 'o':
 				return (row, col, -utility)
 			return (row, col, utility)
 
 		for cell in cells:
+			#print cell
 			# place the move here to test
 			if isMax:
 				board[cell[0]][cell[1]] = player_flag
 			else:
 				board[cell[0]][cell[1]] = opponent_flag
 			if isMax:
-				val = alphabetaPruning(cell, board, block_status, depth-1, alpha, beta, False, player_flag, opponent_flag, row, col)
+				val = alphabetaPruning(cell, board, block_status, depth - 1, alpha, beta, False, player_flag, opponent_flag, row, col)
 				if val[2] > alpha :
 					alpha = val[2]
 					row = cell[0]
 					col = cell[1]
 			else:
-				val = alphabetaPruning(cell, board, block_status, depth-1, alpha, beta, True, player_flag, opponent_flag, row, col)
+				val = alphabetaPruning(cell, board, block_status, depth - 1, alpha, beta, True, player_flag, opponent_flag, row, col)
 				if val[2] < beta:
 					beta = val[2]
 					row = cell[0]
@@ -132,6 +133,10 @@ def getValidEmptyCells(board, block_status, allowed_blocks):
 def calculate(count_empty, count_x, count_o):
 	
 	gain = 0
+	if count_x == 3:
+		gain = 100
+	if count_o == 3:
+		gain = -100
 	if count_x == 1 and count_o == 0 and count_empty == 2:
 		# x-- or --x or -x-
 		gain = 1;
@@ -182,10 +187,12 @@ def getEachBlockUtility(board, block_no):
 			win_in_previous_check = True
 			break
 		else:
+			#print "here in calculate row"
 			current_block_utility += calculate(empty, count_x, count_o)	# else add to current_block_utility
 
 
-	if not win_in_previous_check:		
+	if not win_in_previous_check:	
+		#print "inside columns"	
 		# check for each column
 		for j in range(0, 3):
 			
@@ -214,6 +221,7 @@ def getEachBlockUtility(board, block_no):
 
 
 	if not win_in_previous_check:
+		#print "inside d1"	
 		# then check for diagnol 1
 		empty = 0
 		count_x = 0
@@ -238,6 +246,7 @@ def getEachBlockUtility(board, block_no):
 
 
 	if not win_in_previous_check:
+		#print "inside d2"
 		# if still hasn't won anywhere, then check for diagnol 2
 		empty = 0
 		count_x = 0
@@ -259,7 +268,7 @@ def getEachBlockUtility(board, block_no):
 			win_in_previous_check = True
 		else:
 			current_block_utility += calculate(empty, count_x, count_o)
-
+	#print "out"		
 	# will have all the effect, if win at some time then only that part's contribution, else addition of all other values
 	return current_block_utility	# final gain
 
@@ -295,7 +304,7 @@ def OnEdge(hx, hy, board):
 	return 0
 
 # done
-def OnCenter(hx, hy,board):
+def OnCenter(hx, hy, board):
 	cx=0
 	co=0
 	cd=0
@@ -350,7 +359,7 @@ def OnCenter(hx, hy,board):
 	return 0
 
 # done
-def OnTopLeftOrBottomRight(hx, hy,board):
+def OnTopLeftOrBottomRight(hx, hy, board):
 	cx=0
 	co=0
 	cd=0
@@ -393,7 +402,7 @@ def OnTopLeftOrBottomRight(hx, hy,board):
 	return 0
 
 # done
-def OnTopRightOrBottomLeft(hx, hy,board):
+def OnTopRightOrBottomLeft(hx, hy, board):
 	cx = 0
 	co = 0
 	cd = 0
@@ -436,8 +445,9 @@ def OnTopRightOrBottomLeft(hx, hy,board):
 	return 0
 
 # done
-def CountEmpty(board, block_no):
+def countEmpty(board, block_no):
 
+	#print "here in count empty"
 	count_x = 0;
 	count_o = 0;
 	count_empty = 0;
@@ -445,20 +455,22 @@ def CountEmpty(board, block_no):
 	# calculate block's starting row and column in the board in [0..9][0..9]
 	block_row = block_no / 3;
 	block_col = block_no % 3;
-
+	#print "proceeding"
 	# count number of - in the entire block
-	for j in range(0,3):
-		for i in range(0,3):
+	for j in range(0, 3):
+		#print "came here"
+		for i in range(0, 3):
 			if board[block_row * 3 + i][block_col * 3 + j] == '-':
 				count_empty += 1
 				# save that -'s coordinate 
-				empty_x = (block_row * 3 + i)
-				empty_y = (block_col * 3 + j)
+				empty_x = block_row * 3 + i
+				empty_y = block_col * 3 + j
 			if board[block_row * 3 + i][block_col * 3 + j] == 'x':
 				count_x += 1
 			if board[block_row * 3 + i][block_col * 3 + j] == 'o':
-				count_y += 1
-
+				count_o += 1
+		#print "out of inside for countempty"
+	#print "after for in count empty"			
 	if count_empty == 0:
 		# then no point of putting it there, therefore huge disadvantage
 		return -200
@@ -488,6 +500,7 @@ def CountEmpty(board, block_no):
 		if gain == 0:
 			# if gain is still 0, then no point of putting it there, therefore huge disadvantage
 			return -200
+	##print "out of count empty"
 	return 0
 
 
@@ -650,7 +663,7 @@ def calculateFactor(sum):
 	elif -1 < sum and sum < 0:
 		factor = -(1 - 0)
 	# in our favor
-    elif 0 < sum and sum < 1:
+	elif 0 < sum and sum < 1:
 		factor = (1 - 0)
 	elif 1<sum and sum < 2:
 		factor = (10 - 1)
@@ -658,150 +671,265 @@ def calculateFactor(sum):
 		factor = (100 - 10)
 	return factor
 
+# done
+def getUtilityValue(hsum, factor):
+	value = int(pow(10, abs(int(hsum)) - 1)) + (hsum - int(hsum)) * factor
+	if value < 0:
+		return -value
+	return value
 
-def getBlockGlobalUtility(block_status, block_no, block_utility, player_flag):
+# done
+def checkCorners(normalized_block):
+	count_us_corners = 0
+	count_opponent_corners = 0
+	# calculate number of us and opponent at corners
+	if normalized_block[0][0] != 'draw':
+		if normalized_block[0][0] > 0:
+			count_us_corners += normalized_block[0][0]
+		else:
+			count_opponent_corners += normalized_block[0][0]
+	if normalized_block[0][2] != 'draw':	
+		if normalized_block[0][2] > 0:
+			count_us_corners += normalized_block[0][2]
+		else:
+			count_opponent_corners += normalized_block[0][2]
+	if normalized_block[2][0] != 'draw':
+		if normalized_block[2][0] > 0:
+			count_us_corners += normalized_block[2][0]
+		else:
+			count_opponent_corners += normalized_block[2][0]
+	if normalized_block[2][2] != 'draw':	
+		if normalized_block[2][2] > 0:
+			count_us_corners += normalized_block[2][2]
+		else:
+			count_opponent_corners += normalized_block[2][2]
+
+	return (count_us_corners, count_opponent_corners)
+
+# left
+def check_utility(index, normalized_block):
+	# called to check next block
+	flag = 0
+	in_flag=0
+
+	# along rows
+	if index < 3:
+		for j in range(0, 3):
+			if normalized_block[index][j] == -1 or normalized_block[index][j] == 1:
+			 	save_value = normalized_block[index][j]
+			 	save_index = j
+				in_flag = 1
+				break
+		# we got x or o at any place, then we'll check next			
+		if in_flag == 1:		
+			for k in range(save_index + 1, 3):
+		    		if normalized_block[index][k] == -save_value:	# opposite of what is there in our cell
+		    			flag = 1 	# next is opposite of what we have
+		    			break
 	
-	board_start_row = (block_no / 3)
-	board_start_col = (block_no % 3)
-	utility = 0
+	# along columns	 	   			
+	elif index > 2 and index < 6:
+		for j in range(0,3):
+			if normalized_block[j][index-3] == -1 or normalized_block[j][index-3] == 1:
+				save_value = normalized_block[j][index-3]
+				save_index = j
+				in_flag = 1
+				break
+		if in_flag==1:		
+			for k in range(j, 3):
+		    		if normalized_block[k][index - 3] == -save_value:
+		    			flag = 1
+		    			break
+	elif index == 6:
+		for k in range(0,3):
+			if normalized_block[k][k] == -1 or normalized_block[k][k] == 1:
+				save_value = normalized_block[k][k]
+				in_flag = 1
+				break
+		if in_flag == 1: 		
+			for i in range(k, 3):
+				if normalized_block[i][i] == -save_value:
+					flag = 1
+					break
+
+	elif index == 7:
+		for k in range(0, 3):
+			if normalized_block[k][2-k] == -1 or normalized_block[k][2-k] == 1:
+				save_value = normalized_block[k][2-k]
+				in_flag = 1
+				break
+		if in_flag == 1:		
+			for i in range(k, 3):
+				if normalized_block[i][2-i] == -save_value:
+					flag = 1
+					break
+	# flag is 1 here, if next is opposite of what we have and hence no chance of winning
+	return flag 
+
+# done
+def getBlockGlobalUtility(block_status, block_utility_array):
+	# this is the whole block reprsented in 3*3
+
+	normalized_block = [[0 for x in range(0, 3)] for x in range(0, 3)]
+
+	for i in range(0, 9):
+		x = i / 3;
+		y = i % 3;
+		if block_utility_array[i] == 100:
+			normalized_block[x][y] = 1 			# i.e. clear win in that particular small block
+		elif block_utility_array[i] == -100:
+			normalized_block[x][y] = -1 		# i.e. clear lose in that particular small block
+		elif block_utility_array[i] == -200:
+			normalized_block[x][y] = 'draw'		# i.e. draw in that particular small block
+		else:
+			normalized_block[x][y] = float(block_utility_array[i]) / 100; 
+	#print "ouside for"		
+	utility_array = [0 for x in range(0, 8)]	# for each row, then cloumn, then diagnol1 and then diagnol2, hence (3+3+1+1 = 8)
+
+	index = 0	# start with first row
+	count_us = 0
+	count_opponent = 0
 	
-	count_empty = 0
-	count_x = 0
-	count_o = 0
-	probability = 0
+	# going over each row/col/d1/d2 which actually are small blocks
+	for i in range(0, 3):	
+		# initialize sums here, we'll check for rows/cols/diagnol1/diagnol2 all here, some may get checked again -  doesn't matter
+		row_sum = flag_row = flag_next_row = 0
+		col_sum = flag_col = flag_next_col = 0
+		d1_sum = flag_d1 = flag_next_d1 = 0
+		d2_sum = flag_d2 = flag_next_d2 = 0
+		# initilze draw flags here
+		ultimate_win_flag = 0
+		for j in range(0, 3):
+			# row
+			if normalized_block[i][j] == 'draw':
+				flag_row = 1
+			else:
+				row_sum += normalized_block[i][j]
+			# column
+			if normalized_block[j][i] == 'draw':
+				flag_col = 1
+			else:
+				col_sum += normalized_block[j][i]
+			# diagnol1
+			if normalized_block[j][j] == 'draw':
+				flag_d1 = 1
+			else:
+				d1_sum += normalized_block[j][j]	
+			# diagnol2	
+			if normalized_block[j][2 - j] == 'draw':
+				flag_d2 = 1
+			else:
+				d1_sum += normalized_block[j][2 - j]
+			# keep count of blocks won by us and opponent
+			if normalized_block[i][j] == 1:
+				count_us += 1
+			if normalized_block[i][j] == -1:
+				count_opponent += 1
+		factor_row = calculateFactor(row_sum)
+		factor_col = calculateFactor(col_sum)
+		factor_d1 = calculateFactor(d1_sum)
+		factor_d2 = calculateFactor(d2_sum)
+		#print "calcluted factors"
+		# check conditions patiently
+		# if sum of row/col/d1/d2 is 3 or -3, then clear win/lose
+		if row_sum == 3 or row_sum == -3:	# clear win/lose
+			ultimate_win_flag = row_sum
+			break
+		if col_sum == 3 or col_sum == -3:	# clear win/lose
+			ultimate_win_flag = col_sum
+			break
+		if d1_sum == 3 or d1_sum == -3:	# clear win/lose
+			ultimate_win_flag = d1_sum
+			break
+		if d2_sum == 3 or d2_sum == -3:	# clear win/lose
+			ultimate_win_flag = d2_sum
+			break
+		#print "ultimare"	
+		# if not, then we'll check next to that block
+		if row_sum == -1 or row_sum == 1:
+			flag_next_row = check_utility(index, normalized_block)
+		if col_sum == -1 or col_sum == 1:
+			flag_next_col = check_utility(index + 3, normalized_block)
+		if d1_sum == -1 or d1_sum == 1:
+			flag_next_d1 = check_utility(6, normalized_block)
+		if d2_sum == -1 or d2_sum == 1:
+			flag_next_d2 = check_utility(7, normalized_block)
+		#print "change_utility"
+		if flag_row == 1 or flag_next_row == 1:
+			utility_array[index] = 0
+		else:
+			utility_array[index] = getUtilityValue(row_sum, factor_row)
+		if flag_col == 1 or flag_next_col == 1:
+			utility_array[index] = 0
+		else:
+			utility_array[index] = getUtilityValue(col_sum, factor_col)
+		if flag_d1 == 1 or flag_next_d1 == 1:
+			utility_array[index] = 0
+		else:
+			utility_array[index] = getUtilityValue(d1_sum, factor_d1)
+		if flag_d2 == 1 or flag_next_d2 == 1:
+			utility_array[index] = 0
+		else:
+			utility_array[index] = getUtilityValue(d1_sum, factor_d2)
+		# move to next element
+		index += 1
+	#print "outside whole loop"	
+	return (utility_array, normalized_block, count_us, count_opponent, ultimate_win_flag)
 
-	for i in range(0, 3):
-		
-		check_block_no = board_start_row * 3 + i
-		probability += block_utility[check_block_no]
+# done
+def finalUtility(global_utility, count_us, count_opponent, count_us_corners, count_opponent_corners, ultimate_win_flag):
+	utility_board = 0
+	for k in range(0, 8):
+		if ultimate_win_flag == 3 or ultimate_win_flag == -3:	# clear win/lose
+			utility_board = 100
+			break
+		utility_board = global_utility[k] + utility_board		# need to calculate
+        if ultimate_win_flag != 3 and ultimate_win_flag != -3:
+        	utility_board += (count_us - count_opponent) * 10
+        	utility_board += (abs(count_us_corners)-abs(count_opponent_corners)) * 5
+	return utility_board
 
-		if block_status[check_block_no] == '-':
-			count_empty += 1
-		if block_status[check_block_no] == 'x':
-			count_x += 1
-		if block_status[check_block_no] == 'o':
-			count_o += 1
-	if player_flag == 'x' and count_x == 3:
-		return 1000
-	if player_flag == 'o' and count_o == 3:
-		return 1000
-
-	factor = calculateFactor(count_x, count_o, player_flag)
-	
-	utility +=  factor * ((float)(probability / 30000.0))
-
-	count_empty = 0
-	count_x = 0
-	count_o = 0
-	probability = 0
-	for i in range(0, 3):
-		
-		check_block_no = board_start_col + i * 3
-		probability += block_utility[check_block_no]
-
-		if block_status[check_block_no] == '-':
-			count_empty += 1
-		if block_status[check_block_no] == 'x':
-			count_x += 1
-		if block_status[check_block_no] == 'o':
-			count_o += 1
-	if player_flag == 'x' and count_x == 3:
-		return 1000
-	if player_flag == 'o' and count_o == 3:
-		return 1000
-
-	factor = calculateFactor(count_x, count_o, player_flag)
-
-	utility += factor * ((float)(probability / 30000.0))
-
-	if board_start_row == board_start_col:
-		count_empty = 0
-		count_x = 0
-		count_o = 0
-		probability = 0
-		for i in range(0, 3):
-			
-			check_block_no = 3 * i + i
-			probability += block_utility[check_block_no]
-			
-			if block_status[check_block_no] == '-':
-				count_empty += 1
-			if block_status[check_block_no] == 'x':
-				count_x += 1
-			if block_status[check_block_no] == 'o':
-				count_o += 1
-		if player_flag == 'x' and count_x == 3:
-			return 1000
-		if player_flag == 'o' and count_o == 3:
-			return 1000
-
-		factor = calculateFactor(count_x, count_o, player_flag)
-
-		utility += factor * ((float)(probability / 30000.0))
-
-	if board_start_row == 2 - board_start_col:
-		count_empty = 0
-		count_x = 0
-		count_o = 0
-		probability = 0
-		for i in range(0, 3):
-			
-			check_block_no = 2 * (i + 1)
-			probability += block_utility[check_block_no]
-			
-			if block_status[check_block_no] == '-':
-				count_empty += 1
-			if block_status[check_block_no] == 'x':
-				count_x += 1
-			if block_status[check_block_no] == 'o':
-				count_o += 1
-			if player_flag == 'x' and count_x == 3:
-				return 1000
-			if player_flag == 'o' and count_o == 3:
-				return 1000
-
-		factor = calculateFactor(count_x, count_o, player_flag)
-
-		utility += factor * ((float)(probability / 30000.0))
-	return utility
-
-
-def check(board, block_status, row, col, player_flag):
-	
+# done
+def check(board, block_status):
+	#print "here in check"
 	block_utility = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 	for block_no in range(0 ,9):
 		
 		current_block_utility = getEachBlockUtility(board, block_no)
+		#print "after each block"
 		if current_block_utility == 0:
+			#print "inside count empty"
 			# still zero, then we need to consider additonal effects
 			# it'll be zero only in case of 'xox' or 'xo-' type rows/cols/d1/d2 
 			# i.e. either 0 empty cell or 1 empty cell in the block, 
 			# where we won't have any direct profit if we place there
 			# then we need to check other conditions like draw and any point of putting it there or not
-			count_empty = CountEmpty(board, block_no)
+			current_block_utility = countEmpty(board, block_no)
+		#print "after count empty"
 		block_utility[block_no] = current_block_utility
-	
-	#################
-	cell_utility = getCellUtility(board, block_status, row, col, player_flag)
+	#print "out of each block"
+	# cell_utility = getCellUtility(board, block_status, row, col, player_flag)
 
-	block_no = 3 * ((row - row % 3) / 3) + (col - col % 3) / 3
+	# block_no = 3 * ((row - row % 3) / 3) + (col - col % 3) / 3
 
-	globalUtility = getBlockGlobalUtility(block_status, block_no, block_utility, player_flag)
+	(global_utility, normalized_utility, count_us, count_opponent, ultimate_win_flag) = getBlockGlobalUtility(block_status, block_utility)
+	#print "global"
+	(count_us_corners, count_opponent_corners) = checkCorners(normalized_utility)
+	#print "here after corners"
+	# specific_block_winning_utility = 0
+	# if cell_utility == 10000:
+	# 	if block_no == 4:
+	# 		specific_block_winning_utility = 1000
+	# 	if block_no in [0, 2, 6, 8]:
+	# 		specific_block_winning_utility = 800 
 
-	specific_block_winning_utility = 0
-	if cell_utility == 10000:
-		if block_no == 4:
-			specific_block_winning_utility = 1000
-		if block_no in [0, 2, 6, 8]:
-			specific_block_winning_utility = 800 
-
-	#print "cell utility:", cell_utility
-	#print "global utility:", globalUtility
-	#print "specific utility:", specific_block_winning_utility
-	total = cell_utility / 10.0 + globalUtility + specific_block_winning_utility / 10.0
-	#print "total:", total
-	return total
-
-
+	##print "cell utility:", cell_utility
+	##print "global utility:", globalUtility
+	##print "specific utility:", specific_block_winning_utility
+	#total = cell_utility / 10.0 + globalUtility + specific_block_winning_utility / 10.0
+	##print "total:", total
+	final = finalUtility(global_utility, count_us, count_opponent, count_us_corners, count_opponent_corners, ultimate_win_flag)
+	#print "final", final
+	return final
 
