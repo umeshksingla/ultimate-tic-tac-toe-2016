@@ -64,7 +64,7 @@ def alphabetaPruning(old_move, board, block_status, depth, alpha, beta, isMax, p
 					col = cell[1]
 			# remove the last move, since we haven't yet decided which move to go for
 			board[cell[0]][cell[1]] = '-'
-			if alpha > beta:
+			if alpha >= beta:
 				break
 
 		if isMax:
@@ -108,6 +108,40 @@ def getCells(board, block_status, old_move):
 
 		cells = getValidEmptyCells(board, block_status, allowed_blocks)
 		return cells
+
+def getAllowedBlocks(board, block_status, old_move):
+
+	if old_move == (-1, -1):
+		allowed_blocks = [0, 1, 2, 3, 4, 5, 6, 7, 8]	# all blocka allowed
+	else:
+		allowed_blocks = []
+		if old_move[0]%3 == 1 and old_move[1]%3 == 1:
+			allowed_blocks = [4]
+		else:
+			if old_move[1]%3 == 0 and old_move[0]%3 == 0:
+				allowed_blocks = [1, 3]
+			elif old_move[1]%3 == 1 and old_move[0]%3 == 0:
+				allowed_blocks = [0, 2]
+			elif old_move[1]%3 == 2 and old_move[0]%3 == 0:
+				allowed_blocks = [1, 5]
+			elif old_move[1]%3 == 0 and old_move[0]%3 == 1:
+				allowed_blocks = [0, 6]
+			elif old_move[1]%3 == 2 and old_move[0]%3 == 1:
+				allowed_blocks = [2, 8]
+			elif old_move[1]%3 == 0 and old_move[0]%3 == 2:
+				allowed_blocks = [3, 7]
+			elif old_move[1]%3 == 1 and old_move[0]%3 == 2:
+				allowed_blocks = [6, 8]
+			elif old_move[1]%3 == 2 and old_move[0]%3 == 2:
+				allowed_blocks = [7, 5]
+			else:
+				print "not a valid old move"
+
+	# if already won by 'x' or 'o', then remove from allowed blocks
+	for i in reversed(allowed_blocks):
+			if block_status[i] != '-':
+				allowed_blocks.remove(i)
+	return allowed_blocks
 
 # done
 def getValidEmptyCells(board, block_status, allowed_blocks):
@@ -602,6 +636,13 @@ def getCellUtility(board, block_status, cell_row, cell_col):
 			return calculate(empty, count_x, count_o)
 	if count_o == 3:
 			return calculate(empty, count_x, count_o)
+	if count_x == 1 and count_o == 2:
+		if board[cell_row][cell_col] == 'x':
+			return 50
+
+	if count_o == 1 and count_x == 2:
+		if board[cell_row][cell_col] == 'o':
+			return -50
 
 	utility += calculate(empty, count_x, count_o)
 
@@ -622,6 +663,13 @@ def getCellUtility(board, block_status, cell_row, cell_col):
 			return calculate(empty, count_x, count_o)
 	if count_o == 3:
 			return calculate(empty, count_x, count_o)
+	if count_x == 1 and count_o == 2:
+		if board[cell_row][cell_col] == 'x':
+			return 50
+
+	if count_o == 1 and count_x == 2:
+		if board[cell_row][cell_col] == 'o':
+			return -50
 
 	utility += calculate(empty, count_x, count_o)
 
@@ -642,7 +690,16 @@ def getCellUtility(board, block_status, cell_row, cell_col):
 			return calculate(empty, count_x, count_o)
 		if count_o == 3:
 			return calculate(empty, count_x, count_o)
+
+		if count_x == 1 and count_o == 2:
+			if board[cell_row][cell_col] == 'x':
+				return 50
+
+		if count_o == 1 and count_x == 2:
+			if board[cell_row][cell_col] == 'o':
+				return -50
 		utility += calculate(empty, count_x, count_o)
+
 
 	# diagnol 2
 	if cell_row % 3 == 2 - cell_col % 3:
@@ -661,6 +718,14 @@ def getCellUtility(board, block_status, cell_row, cell_col):
 			return calculate(empty, count_x, count_o)
 		if count_o == 3:
 			return calculate(empty, count_x, count_o)
+
+		if count_x == 1 and count_o == 2:
+			if board[cell_row][cell_col] == 'x':
+				return 50
+
+		if count_o == 1 and count_x == 2:
+			if board[cell_row][cell_col] == 'o':
+				return -50
 		utility += calculate(empty, count_x, count_o)
 
 	return utility
@@ -1018,15 +1083,18 @@ def finalGlobalUtility(global_utility, count_us, count_opponent, count_us_corner
 	return utility_board
 
 
-def checkCurrentPosition(board, current_row, current_col):
+def checkCurrentPosition(current_row, current_col):
 	
 	# if corners
 	if current_row in [0, 2, 3, 5, 6, 8] and current_col in [0, 2, 3, 5, 6, 8]:
-		return 4
-	elif current_row in [1, 4, 7] and current_col in [1, 4 ,7]:
-		return -2
-	return 0
+		return True
+	return False
 
+
+def checkCenter(current_row, current_col):
+	if current_row in [1, 4, 7] and current_col in [1, 4, 7]:
+		return True
+	return False
 # done
 def check(board, block_status, current_row, current_col, player_flag):
 	#print "here in check"
@@ -1047,7 +1115,10 @@ def check(board, block_status, current_row, current_col, player_flag):
 			current_block_utility = countEmpty(board, block_no)
 		#print "after count empty"
 		block_utility[block_no] = current_block_utility
-	
+	allowed_blocks_sum = 0
+	allowed_opponent_blocks = getAllowedBlocks(board, block_status, (current_row, current_col))
+	for block in allowed_opponent_blocks:
+		allowed_blocks_sum += block_utility[block_no]
 	
 	# utility specific to corners in a cell
 	specific_block_utility = 0
@@ -1057,17 +1128,20 @@ def check(board, block_status, current_row, current_col, player_flag):
 	#print "out of each block"
 	cell_utility = getCellUtility(board, block_status, current_row, current_col) + specific_block_utility
 	#print 'cell_utility: ', cell_utility
-
 	(global_utility, normalized_utility, count_us, count_opponent, ultimate_win_flag) = getBlockGlobalUtility(block_status, block_utility)
 	#print "global"
 	(count_us_corners, count_opponent_corners) = checkCorners(normalized_utility)
 
 	final = finalGlobalUtility(global_utility, count_us, count_opponent, count_us_corners, count_opponent_corners, ultimate_win_flag)
-
+	final += allowed_blocks_sum/10
+	#if(checkCenter(current_row, current_col)):
+	#	final -= 10
+	if checkCurrentPosition(current_row, current_col):
+		final += 5
 	
-	#final += cell_utility/10
+	final += cell_utility/10
 	#if checkOpponentWinning(board,current_row, current_col, block_status, player_flag):
-	#	final -= 20
+	#	final -= 10
 	
 	#print "here after corners"
 	# specific_block_winning_utility = 0
@@ -1085,3 +1159,989 @@ def check(board, block_status, current_row, current_col, player_flag):
 	#print "final", final
 	return final
 
+
+# trace of game against random bot
+# Random - P1, Our Player - P2
+# START
+# =========== Game Board ===========
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (6, 5) with x
+# =========== Game Board ===========
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# - - -  - - x  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (0, 3) with o
+# =========== Game Board ===========
+# - - -  o - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# - - -  - - x  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (3, 0) with x
+# =========== Game Board ===========
+# - - -  o - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# x - -  - - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# - - -  - - x  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (0, 5) with o
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# x - -  - - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# - - -  - - x  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (2, 4) with x
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - -  - x -  - - -
+
+# x - -  - - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# - - -  - - x  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (7, 7) with o
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - -  - x -  - - -
+
+# x - -  - - -  - - -
+# - - -  - - -  - - -
+# - - -  - - -  - - -
+
+# - - -  - - x  - - -
+# - - -  - - -  - o -
+# - - -  - - -  - - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (5, 3) with x
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - -  - x -  - - -
+
+# x - -  - - -  - - -
+# - - -  - - -  - - -
+# - - -  x - -  - - -
+
+# - - -  - - x  - - -
+# - - -  - - -  - o -
+# - - -  - - -  - - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (5, 2) with o
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - -  - x -  - - -
+
+# x - -  - - -  - - -
+# - - -  - - -  - - -
+# - - o  x - -  - - -
+
+# - - -  - - x  - - -
+# - - -  - - -  - o -
+# - - -  - - -  - - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (5, 7) with x
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - -  - x -  - - -
+
+# x - -  - - -  - - -
+# - - -  - - -  - - -
+# - - o  x - -  - x -
+
+# - - -  - - x  - - -
+# - - -  - - -  - o -
+# - - -  - - -  - - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (8, 6) with o
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - -  - x -  - - -
+
+# x - -  - - -  - - -
+# - - -  - - -  - - -
+# - - o  x - -  - x -
+
+# - - -  - - x  - - -
+# - - -  - - -  - o -
+# - - -  - - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (3, 1) with x
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - -  - x -  - - -
+
+# x x -  - - -  - - -
+# - - -  - - -  - - -
+# - - o  x - -  - x -
+
+# - - -  - - x  - - -
+# - - -  - - -  - o -
+# - - -  - - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (2, 2) with o
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - o  - x -  - - -
+
+# x x -  - - -  - - -
+# - - -  - - -  - - -
+# - - o  x - -  - x -
+
+# - - -  - - x  - - -
+# - - -  - - -  - o -
+# - - -  - - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (8, 3) with x
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - o  - x -  - - -
+
+# x x -  - - -  - - -
+# - - -  - - -  - - -
+# - - o  x - -  - x -
+
+# - - -  - - x  - - -
+# - - -  - - -  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (3, 2) with o
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - o  - x -  - - -
+
+# x x o  - - -  - - -
+# - - -  - - -  - - -
+# - - o  x - -  - x -
+
+# - - -  - - x  - - -
+# - - -  - - -  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (2, 3) with x
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - -  - - -  - - -
+# - - o  x - -  - x -
+
+# - - -  - - x  - - -
+# - - -  - - -  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# - - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (4, 2) with o
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - -  - x -
+
+# - - -  - - x  - - -
+# - - -  - - -  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# o - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (6, 7) with x
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - - -
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - -  - x -
+
+# - - -  - - x  - x -
+# - - -  - - -  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# o - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (1, 7) with o
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - o -
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - -  - x -
+
+# - - -  - - x  - x -
+# - - -  - - -  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# o - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (5, 5) with x
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - o -
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - x  - x -
+
+# - - -  - - x  - x -
+# - - -  - - -  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# o - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (7, 5) with o
+# =========== Game Board ===========
+# - - -  o - o  - - -
+# - - -  - - -  - o -
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - x  - x -
+
+# - - -  - - x  - x -
+# - - -  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# o - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (0, 7) with x
+# =========== Game Board ===========
+# - - -  o - o  - x -
+# - - -  - - -  - o -
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - x  - x -
+
+# - - -  - - x  - x -
+# - - -  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# o - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (1, 8) with o
+# =========== Game Board ===========
+# - - -  o - o  - x -
+# - - -  - - -  - o o
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - x  - x -
+
+# - - -  - - x  - x -
+# - - -  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# o - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (1, 6) with x
+# =========== Game Board ===========
+# - - -  o - o  - x -
+# - - -  - - -  x o o
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - x  - x -
+
+# - - -  - - x  - x -
+# - - -  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# o - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (7, 2) with o
+# =========== Game Board ===========
+# - - -  o - o  - x -
+# - - -  - - -  x o o
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - x  - x -
+
+# - - -  - - x  - x -
+# - - o  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# o - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (6, 6) with x
+# =========== Game Board ===========
+# - - -  o - o  - x -
+# - - -  - - -  x o o
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - x  - x -
+
+# - - -  - - x  x x -
+# - - o  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - - -
+# o - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (0, 4) with o
+# =========== Game Board ===========
+# - - -  o o o  - x -
+# - - -  - - -  x o o
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - x  - x -
+
+# - - -  - - x  x x -
+# - - o  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o -
+# o - -
+# - - -
+# ==================================
+
+# Player 1 made the move: (0, 6) with x
+# =========== Game Board ===========
+# - - -  o o o  x x -
+# - - -  - - -  x o o
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - x  - x -
+
+# - - -  - - x  x x -
+# - - o  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o -
+# o - -
+# - - -
+# ==================================
+
+# Player 2 made the move: (6, 8) with o
+# =========== Game Board ===========
+# - - -  o o o  x x -
+# - - -  - - -  x o o
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - -
+# - - o  x - x  - x -
+
+# - - -  - - x  x x o
+# - - o  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o -
+# o - -
+# - - o
+# ==================================
+
+# Player 1 made the move: (4, 8) with x
+# =========== Game Board ===========
+# - - -  o o o  x x -
+# - - -  - - -  x o o
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - - x  x x o
+# - - o  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o -
+# o - -
+# - - o
+# ==================================
+
+# Player 2 made the move: (0, 8) with o
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - - -  - - -  x o o
+# - - o  x x -  - - -
+
+# x x o  - - -  - - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - - x  x x o
+# - - o  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o -
+# o - -
+# - - o
+# ==================================
+
+# Player 1 made the move: (3, 6) with x
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - - -  - - -  x o o
+# - - o  x x -  - - -
+
+# x x o  - - -  x - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - - x  x x o
+# - - o  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o -
+# o - -
+# - - o
+# ==================================
+
+# Player 2 made the move: (2, 6) with o
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - - -  - - -  x o o
+# - - o  x x -  o - -
+
+# x x o  - - -  x - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - - x  x x o
+# - - o  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o - -
+# - - o
+# ==================================
+
+# Player 1 made the move: (6, 4) with x
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - - -  - - -  x o o
+# - - o  x x -  o - -
+
+# x x o  - - -  x - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - x x  x x o
+# - - o  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o - -
+# - - o
+# ==================================
+
+# Player 2 made the move: (2, 1) with o
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - - -  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  - - -  x - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - x x  x x o
+# - - o  - - o  - o -
+# - - -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o - -
+# - - o
+# ==================================
+
+# Player 1 made the move: (8, 1) with x
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - - -  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  - - -  x - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - x x  x x o
+# - - o  - - o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o - -
+# - - o
+# ==================================
+
+# Player 2 made the move: (7, 1) with o
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - - -  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  - - -  x - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - x x  x x o
+# - o o  - - o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o - -
+# - - o
+# ==================================
+
+# Player 1 made the move: (3, 3) with x
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - - -  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - x x  x x o
+# - o o  - - o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o - -
+# - - o
+# ==================================
+
+# Player 2 made the move: (7, 0) with o
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - - -  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - x x  x x o
+# o o o  - - o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o - -
+# o - o
+# ==================================
+
+# Player 1 made the move: (1, 2) with x
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - - x  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - x x  x x o
+# o o o  - - o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o - -
+# o - o
+# ==================================
+
+# Player 2 made the move: (1, 1) with o
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - o x  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x - -
+# - - o  - - -  - - x
+# - - o  x - x  - x -
+
+# - - -  - x x  x x o
+# o o o  - - o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o - -
+# o - o
+# ==================================
+
+# Player 1 made the move: (4, 5) with x
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - o x  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x - -
+# - - o  - - x  - - x
+# - - o  x - x  - x -
+
+# - - -  - x x  x x o
+# o o o  - - o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o - -
+# o - o
+# ==================================
+
+# Player 2 made the move: (7, 4) with o
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - o x  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x - -
+# - - o  - - x  - - x
+# - - o  x - x  - x -
+
+# - - -  - x x  x x o
+# o o o  - o o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o - -
+# o - o
+# ==================================
+
+# Player 1 made the move: (4, 4) with x
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - o x  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x - -
+# - - o  - x x  - - x
+# - - o  x - x  - x -
+
+# - - -  - x x  x x o
+# o o o  - o o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o x -
+# o - o
+# ==================================
+
+# Player 2 made the move: (5, 6) with o
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - o x  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x - -
+# - - o  - x x  - - x
+# - - o  x - x  o x -
+
+# - - -  - x x  x x o
+# o o o  - o o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o x -
+# o - o
+# ==================================
+
+# Player 1 made the move: (7, 3) with x
+# =========== Game Board ===========
+# - - -  o o o  x x o
+# - o x  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x - -
+# - - o  - x x  - - x
+# - - o  x - x  o x -
+
+# - - -  - x x  x x o
+# o o o  x o o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o x -
+# o - o
+# ==================================
+
+# Player 2 made the move: (0, 2) with o
+# =========== Game Board ===========
+# - - o  o o o  x x o
+# - o x  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x - -
+# - - o  - x x  - - x
+# - - o  x - x  o x -
+
+# - - -  - x x  x x o
+# o o o  x o o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o x -
+# o - o
+# ==================================
+
+# Player 1 made the move: (3, 7) with x
+# =========== Game Board ===========
+# - - o  o o o  x x o
+# - o x  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x x -
+# - - o  - x x  - - x
+# - - o  x - x  o x -
+
+# - - -  - x x  x x o
+# o o o  x o o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# - o o
+# o x -
+# o - o
+# ==================================
+
+# Player 2 made the move: (0, 0) with o
+# =========== Game Board ===========
+# o - o  o o o  x x o
+# - o x  - - -  x o o
+# - o o  x x -  o - -
+
+# x x o  x - -  x x -
+# - - o  - x x  - - x
+# - - o  x - x  o x -
+
+# - - -  - x x  x x o
+# o o o  x o o  - o -
+# - x -  x - -  o - -
+# ==================================
+# =========== Block Status =========
+# o o o
+# o x -
+# o - o
+# ==================================
+
+# P2
+# COMPLETE
+# OVER

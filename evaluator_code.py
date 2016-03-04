@@ -17,8 +17,8 @@ import sys
 import random
 import signal
 
-from team72v2 import Player72
-import sid
+from plast import Player72
+import sid, vinay
 
 class TimedOutExc(Exception):
         pass
@@ -38,19 +38,19 @@ class ManualPlayer:
 		return (int(mvp[0]), int(mvp[1]))
 
 
-# class Player1:
+class Player1:
 	
-# 	def __init__(self):
-# 		# You may initialize your object here and use any variables for storing throughout the game
-# 		pass
+	def __init__(self):
+		# You may initialize your object here and use any variables for storing throughout the game
+		pass
 
-# 	def move(self,temp_board,temp_block,old_move,flag):
-# 		#List of permitted blocks, based on old move.
-# 		blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
-# 		#Get list of empty valid cells
-# 		cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
-# 		#Choose a move based on some algorithm, here it is a random move.
-# 		return cells[random.randrange(len(cells))]
+	def move(self,temp_board,temp_block,old_move,flag):
+		#List of permitted blocks, based on old move.
+		blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
+		#Get list of empty valid cells
+		cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
+		#Choose a move based on some algorithm, here it is a random move.
+		return cells[random.randrange(len(cells))]
 
 class Player2:
 	
@@ -399,8 +399,8 @@ if __name__ == '__main__':
 	obj2 = ''
 	option = sys.argv[1]	
 	if option == '1':
-		obj1 = Player72()
-		obj2 = sid.Player65()
+		obj1 = Player1()
+		obj2 = Player72()
 
 	elif option == '2':
 		obj1 = Player1()
@@ -416,6 +416,6 @@ if __name__ == '__main__':
 	num = random.uniform(0,1)
 
 	simulate(obj1, obj2)
-	print "I am P1"
+	# print "I am P2"
 		
 	
